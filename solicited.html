@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>My Service Solicitations</title>
+        <script
+            crossorigin
+            src="https://unpkg.com/react@18/umd/react.development.js"
+        ></script>
+        <script
+            crossorigin
+            src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+        ></script>
+        <script
+            crossorigin
+            src="https://unpkg.com/babel-standalone@6/babel.min.js"
+        ></script>
+        <script src="data.js"></script>
+        <style>
+            body {
+                font-family: system-ui, sans-serif;
+                line-height: 1.5;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 1rem;
+                color: #333;
+                background-color: #f9f9f9;
+            }
+            header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 2rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #eaeaea;
+            }
+            .user-info {
+                padding: 1rem;
+                background: #f0f7ff;
+                border-radius: 8px;
+                margin-bottom: 2rem;
+            }
+            .solicitation-card {
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                margin-bottom: 1.5rem;
+                overflow: hidden;
+            }
+            .solicitation-header {
+                padding: 1rem;
+                background: #f5f5f5;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .solicitation-body {
+                padding: 1rem;
+            }
+            .solicitation-footer {
+                padding: 1rem;
+                background: #f9f9f9;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .action-buttons {
+                display: flex;
+                gap: 0.75rem;
+            }
+            .badge {
+                display: inline-block;
+                padding: 0.25rem 0.5rem;
+                border-radius: 4px;
+                font-size: 0.85rem;
+                font-weight: bold;
+                text-transform: uppercase;
+            }
+            .badge-pending {
+                background-color: #fff3cd;
+                color: #856404;
+            }
+            .badge-approved {
+                background-color: #d4edda;
+                color: #155724;
+            }
+            .badge-denied {
+                background-color: #f8d7da;
+                color: #721c24;
+            }
+
+            button {
+                padding: 0.5rem 1rem;
+                border: none;
+                border-radius: 4px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+            .btn-primary {
+                background-color: #007bff;
+                color: white;
+            }
+            .btn-primary:hover {
+                background-color: #0069d9;
+            }
+            .btn-secondary {
+                background-color: #6c757d;
+                color: white;
+            }
+            .btn-secondary:hover {
+                background-color: #5a6268;
+            }
+            .btn-approve {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+            .btn-approve:hover {
+                background-color: #c3e6cb;
+            }
+            .btn-deny {
+                background-color: #f8d7da;
+                color: #721c24;
+                border: 1px solid #f5c6cb;
+            }
+            .btn-deny:hover {
+                background-color: #f5c6cb;
+            }
+            .btn-outline {
+                background-color: transparent;
+                border: 1px solid #6c757d;
+                color: #6c757d;
+            }
+            .btn-outline:hover {
+                background-color: #f1f1f1;
+            }
+            .data-points {
+                background: #f8f9fa;
+                padding: 1rem;
+                border-radius: 4px;
+                margin-top: 1rem;
+            }
+            .data-point {
+                margin-bottom: 0.5rem;
+            }
+            .data-label {
+                font-weight: bold;
+                margin-right: 0.5rem;
+            }
+            .empty-state {
+                text-align: center;
+                padding: 3rem 1rem;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+            .tabs {
+                display: flex;
+                margin-bottom: 1.5rem;
+                border-bottom: 1px solid #dee2e6;
+            }
+            .tab {
+                padding: 0.75rem 1rem;
+                cursor: pointer;
+                margin-right: 0.25rem;
+                border-bottom: 3px solid transparent;
+            }
+            .tab-active {
+                border-bottom: 3px solid #007bff;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root"></div>
+
+        <script type="text/babel">
+            function UserServiceSolicitations() {
+                const {
+                    service_solicitation_definitions,
+                    service_solicitations,
+                    solicitors,
+                    soliciteds,
+                } = window.APP_DATA;
+
+                // Current user - Robert Johnson (ID: 2)
+                const currentUser = soliciteds.find((s) => s.id === 2);
+
+                // Filter service_solicitations for the current user
+                const userServiceSolicitations = service_solicitations.filter(
+                    (s) => s.solicited_id === currentUser.id,
+                );
+
+                // Filter tab state
+                const [activeTab, setActiveTab] = React.useState("all");
+                const [showDetails, setShowDetails] = React.useState({});
+
+                // Get solicitor info by ID
+                const getSolicitor = (id) => {
+                    return solicitors.find((s) => s.id === id) || {};
+                };
+
+                // Get definition by ID
+                const getDefinition = (id) => {
+                    return (
+                        service_solicitation_definitions.find(
+                            (d) => d.id === id,
+                        ) || {}
+                    );
+                };
+
+                // Format date
+                const formatDate = (dateString) => {
+                    if (!dateString) return "Pending";
+                    const date = new Date(dateString);
+                    return (
+                        date.toLocaleDateString() +
+                        " " +
+                        date.toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        })
+                    );
+                };
+
+                // Generate status class
+                const getStatusClass = (resolution) => {
+                    if (!resolution) return "pending";
+                    return resolution.toLowerCase();
+                };
+
+                // Toggle showing details for a solicitation
+                const toggleDetails = (id) => {
+                    setShowDetails((prev) => ({
+                        ...prev,
+                        [id]: !prev[id],
+                    }));
+                };
+
+                // Handle resolution
+                const handleResolution = (id, resolution) => {
+                    alert(
+                        `This would ${resolution} service solicitation #${id} in a real app.`,
+                    );
+                };
+
+                // Filter based on active tab
+                const filteredServiceSolicitations =
+                    userServiceSolicitations.filter((s) => {
+                        if (activeTab === "all") return true;
+                        if (activeTab === "pending") return !s.resolution;
+                        if (activeTab === "resolved") return s.resolution;
+                        return true;
+                    });
+
+                return (
+                    <div>
+                        <header>
+                            <h1>My Service Solicitations</h1>
+                        </header>
+
+                        <div className="user-info">
+                            <h2>{currentUser.name}</h2>
+                            <p>{currentUser.address}</p>
+                            <p>{currentUser.email}</p>
+                        </div>
+
+                        <div className="tabs">
+                            <div
+                                className={`tab ${activeTab === "all" ? "tab-active" : ""}`}
+                                onClick={() => setActiveTab("all")}
+                            >
+                                All
+                            </div>
+                            <div
+                                className={`tab ${activeTab === "pending" ? "tab-active" : ""}`}
+                                onClick={() => setActiveTab("pending")}
+                            >
+                                Pending
+                            </div>
+                            <div
+                                className={`tab ${activeTab === "resolved" ? "tab-active" : ""}`}
+                                onClick={() => setActiveTab("resolved")}
+                            >
+                                Resolved
+                            </div>
+                        </div>
+
+                        {filteredServiceSolicitations.length === 0 ? (
+                            <div className="empty-state">
+                                <h3>No service solicitations found</h3>
+                                <p>
+                                    You don't have any service solicitations in
+                                    this category.
+                                </p>
+                            </div>
+                        ) : (
+                            filteredServiceSolicitations.map(
+                                (service_solicitation) => {
+                                    const definition = getDefinition(
+                                        service_solicitation.service_solicitation_definition_id,
+                                    );
+                                    const solicitor = getSolicitor(
+                                        definition.solicitor_id,
+                                    );
+
+                                    return (
+                                        <div
+                                            key={service_solicitation.id}
+                                            className="solicitation-card"
+                                        >
+                                            <div className="solicitation-header">
+                                                <h3>{solicitor.name}</h3>
+                                                <span
+                                                    className={`badge badge-${getStatusClass(service_solicitation.resolution)}`}
+                                                >
+                                                    {service_solicitation.resolution ||
+                                                        "Pending Response"}
+                                                </span>
+                                            </div>
+
+                                            <div className="solicitation-body">
+                                                <p>
+                                                    <strong>Received:</strong>{" "}
+                                                    {formatDate(
+                                                        service_solicitation.sent_at,
+                                                    )}
+                                                </p>
+                                                <p>{definition.message}</p>
+
+                                                {showDetails[
+                                                    service_solicitation.id
+                                                ] && (
+                                                    <div className="data-points">
+                                                        <h4>
+                                                            Data to be shared:
+                                                        </h4>
+                                                        {definition.solicited_selection &&
+                                                          (() => {
+                                                            // Extract field names from GraphQL selection
+                                                            const selectionText = definition.solicited_selection;
+                                                            const fieldRegex = /\s+(\w+)/g;
+                                                            const matches = [...selectionText.matchAll(fieldRegex)];
+                                                            const fields = matches.map(match => match[1]);
+                                                            
+                                                            return fields.map(field => {
+                                                              let value = null;
+                                                              let label = field.replace(/_/g, ' ');
+                                                              
+                                                              // Map field to corresponding value in user data
+                                                              if (field === 'name') {
+                                                                value = currentUser.name;
+                                                              } else if (field === 'address') {
+                                                                value = currentUser.address;
+                                                              } else if (field === 'property_owner') {
+                                                                value = currentUser.data.property_owner ? 'Yes' : 'No';
+                                                              } else if (field === 'household_size') {
+                                                                value = currentUser.data.household_size;
+                                                              } else if (field === 'income_bracket') {
+                                                                value = currentUser.data.income_bracket;
+                                                              } else if (field === 'residence_location') {
+                                                                value = currentUser.data.residence_location;
+                                                              } else if (field === 'age') {
+                                                                value = currentUser.data.age;
+                                                              } else if (field === 'current_benefits') {
+                                                                value = currentUser.data.current_benefits.join(', ');
+                                                              }
+                                                              
+                                                              if (value !== null) {
+                                                                return (
+                                                                  <div className="data-point" key={field}>
+                                                                    <span className="data-label">
+                                                                      {label.charAt(0).toUpperCase() + label.slice(1)}:
+                                                                    </span>{" "}
+                                                                    {value}
+                                                                  </div>
+                                                                );
+                                                              }
+                                                              
+                                                              return null;
+                                                            });
+                                                          })()
+                                                        }
+                                                                
+                                                        <p>
+                                                            <small>
+                                                                {solicitor.name} will
+                                                                only have access
+                                                                to this data if
+                                                                you approve.
+                                                            </small>
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="solicitation-footer">
+                                                <button
+                                                    onClick={() =>
+                                                        toggleDetails(
+                                                            service_solicitation.id,
+                                                        )
+                                                    }
+                                                    className="btn-outline"
+                                                >
+                                                    {showDetails[
+                                                        service_solicitation.id
+                                                    ]
+                                                        ? "Hide Details"
+                                                        : "View Details"}
+                                                </button>
+
+                                                {!service_solicitation.resolution && (
+                                                    <div className="action-buttons">
+                                                        <button
+                                                            onClick={() =>
+                                                                handleResolution(
+                                                                    service_solicitation.id,
+                                                                    "deny",
+                                                                )
+                                                            }
+                                                            className="btn-deny"
+                                                        >
+                                                            Deny
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleResolution(
+                                                                    service_solicitation.id,
+                                                                    "approve",
+                                                                )
+                                                            }
+                                                            className="btn-approve"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                },
+                            )
+                        )}
+                    </div>
+                );
+            }
+
+            // Mount the React app
+            ReactDOM.createRoot(document.getElementById("root")).render(
+                <UserServiceSolicitations />,
+            );
+        </script>
+    </body>
+</html>

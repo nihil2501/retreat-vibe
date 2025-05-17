@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency Service Solicitation Management</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script crossorigin src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="data.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f7f9;
+    }
+    button {
+      background-color: #f1f2f6;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background-color: #e2e6ea;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #e1e4e8;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .db-table {
+      background-color: white;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      overflow: hidden;
+      margin-bottom: 30px;
+    }
+    .table-header {
+      background-color: #f1f2f6;
+      padding: 12px 15px;
+      border-bottom: 1px solid #e1e4e8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .table-header h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      color: #2d3748;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .data-table th {
+      background-color: #f8f9fa;
+      text-align: left;
+      padding: 12px 15px;
+      font-weight: 600;
+      color: #4a5568;
+      border-bottom: 1px solid #e1e4e8;
+      position: sticky;
+      top: 0;
+    }
+    .data-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #e1e4e8;
+      vertical-align: top;
+    }
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+    .query-cell {
+      max-width: 100%;
+      overflow: auto;
+    }
+    pre {
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      padding: 10px;
+      margin: 0;
+      overflow: auto;
+      font-size: 0.85rem;
+      max-height: 200px;
+    }
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 5px;
+    }
+    .tag-active {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .tag-expired {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    .tag-pending {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    .api-section {
+      background-color: white;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-top: 30px;
+    }
+    .endpoint {
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .endpoint-path {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 10px;
+    }
+    .method {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+    .method-post {
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+    .method-get {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .method-put {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    .sql-example {
+      background-color: #282c34;
+      color: #abb2bf;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 10px;
+      overflow: auto;
+    }
+    .sql-keyword {
+      color: #c678dd;
+    }
+    .sql-string {
+      color: #98c379;
+    }
+    .info-panel {
+      background-color: #e2f0fd;
+      border-left: 4px solid #3498db;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 0 4px 4px 0;
+    }
+    .connections-view {
+      margin-top: 20px;
+    }
+    .agency-card {
+      background-color: white;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .agency-header {
+      border-bottom: 2px solid #f1f2f6;
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+    .field-self {
+      color: #155724;
+    }
+    .field-external {
+      color: #721c24;
+    }
+    .field-unknown {
+      color: #856404;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    function SolicitorView() {
+      const { 
+        service_solicitation_definitions, 
+        solicitors 
+      } = window.APP_DATA;
+      
+      const [selectedSolicitation, setSelectedSolicitation] = React.useState(null);
+      const [viewMode, setViewMode] = React.useState('solicitations'); // 'solicitations' or 'connections'
+      
+      // Format date strings
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+      
+      // Get solicitor name
+      function getSolicitorName(id) {
+        const solicitor = solicitors.find(function(s) { 
+          return s.id === id; 
+        });
+        return solicitor ? solicitor.name : 'Unknown';
+      }
+      
+      // Get solicitor by id
+      function getSolicitor(id) {
+        return solicitors.find(function(s) { 
+          return s.id === id; 
+        });
+      }
+      
+      // Handle row click
+      function handleRowClick(solicitation) {
+        if (selectedSolicitation && selectedSolicitation.id === solicitation.id) {
+          setSelectedSolicitation(null);
+        } else {
+          setSelectedSolicitation(solicitation);
+        }
+      }
+      
+      // Extract fields from GraphQL-like string
+      function extractFields(graphQLString) {
+        if (!graphQLString) return [];
+        
+        return graphQLString
+          .trim()
+          .split('\n')
+          .map(function(line) { return line.trim(); })
+          .filter(function(line) { return line && line !== '{' && line !== '}'; });
+      }
+      
+      // Determine if an agency owns a field
+      function isFieldOwnedBy(agency, field) {
+        if (!agency || !agency.field_authorities || !field) return false;
+        return agency.field_authorities.indexOf(field) >= 0;
+      }
+      
+      // Find which agency owns a field
+      function getFieldOwner(field) {
+        if (!field || field === '{' || field === '}') return null;
+        
+        return solicitors.find(function(s) {
+          return isFieldOwnedBy(s, field);
+        });
+      }
+      
+      // Render solicitation list view
+      function renderSolicitationListView() {
+        return (
+          <div className="db-table">
+            <div className="table-header">
+              <h2>service_solicitation_definitions</h2>
+              <div>
+                <small>Database view - simplified format</small>
+              </div>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Solicitor</th>
+                    <th>Start At</th>
+                    <th>Finish At</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {service_solicitation_definitions.map(function(def) {
+                    return (
+                      <tr key={def.id}>
+                        <td>
+                          <a 
+                            href="#" 
+                            onClick={function(e) { 
+                              e.preventDefault(); 
+                              handleRowClick(def); 
+                            }} 
+                            style={{ 
+                              textDecoration: 'underline', 
+                              color: '#0366d6', 
+                              cursor: 'pointer' 
+                            }}
+                          >
+                            {def.id}
+                          </a>
+                        </td>
+                        <td>{getSolicitorName(def.solicitor_id)}</td>
+                        <td>{formatDate(def.start_at)}</td>
+                        <td>{formatDate(def.finish_at)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      }
+      
+      // Render solicitation detail view
+      function renderSolicitationDetailView() {
+        if (!selectedSolicitation) return null;
+        
+        const solicitor = getSolicitor(selectedSolicitation.solicitor_id);
+        const fieldAuthorities = solicitor ? solicitor.field_authorities : null;
+        
+        return (
+          <div className="db-table" style={{ marginTop: '20px' }}>
+            <div className="table-header">
+              <h2>Solicitation Details - ID: {selectedSolicitation.id}</h2>
+              <button onClick={function() { setSelectedSolicitation(null); }}>Close</button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <h3>Basic Information</h3>
+              <table className="data-table" style={{ marginBottom: '20px' }}>
+                <tbody>
+                  <tr>
+                    <th style={{ width: '150px' }}>ID</th>
+                    <td>{selectedSolicitation.id}</td>
+                  </tr>
+                  <tr>
+                    <th>Solicitor</th>
+                    <td>{getSolicitorName(selectedSolicitation.solicitor_id)}</td>
+                  </tr>
+                  <tr>
+                    <th>Start At</th>
+                    <td>{formatDate(selectedSolicitation.start_at)}</td>
+                  </tr>
+                  <tr>
+                    <th>Finish At</th>
+                    <td>{formatDate(selectedSolicitation.finish_at)}</td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <h3>Field Authorities</h3>
+              <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '4px', marginBottom: '20px' }}>
+                <pre><code>{fieldAuthorities || 'No field authorities defined'}</code></pre>
+              </div>
+              
+              <h3>Message</h3>
+              <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '4px', marginBottom: '20px', whiteSpace: 'pre-wrap' }}>
+                {selectedSolicitation.message}
+              </div>
+              
+              <h3>Solicited Query</h3>
+              <pre style={{ marginBottom: '20px' }}>
+                <code>{selectedSolicitation.solicited_query}</code>
+              </pre>
+              
+              <h3>Solicited Selection</h3>
+              <pre style={{ marginBottom: '20px' }}>
+                <code>{selectedSolicitation.solicited_selection}</code>
+              </pre>
+              
+              <h3>Field Selection Analysis</h3>
+              <div style={{ padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+                <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                  {extractFields(selectedSolicitation.solicited_selection).map(function(field, idx) {
+                    const ownerAgency = getFieldOwner(field);
+                    const isSelfOwned = ownerAgency && ownerAgency.id === selectedSolicitation.solicitor_id;
+                    const colorClass = isSelfOwned ? 'field-self' : (ownerAgency ? 'field-external' : 'field-unknown');
+                    
+                    return (
+                      <li key={idx} style={{ marginBottom: '8px' }} className={colorClass}>
+                        Field <code>{field}</code>: {
+                          ownerAgency ? 
+                            (isSelfOwned ? 
+                              <span>Owned by <strong>{ownerAgency.name}</strong> (self)</span> : 
+                              <span>Owned by <strong>{ownerAgency.name}</strong> (external dependency)</span>
+                            ) : 
+                            <span>Not explicitly owned by any agency</span>
+                        }
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
+          </div>
+        );
+      }
+      
+      // Render agency connections view
+      function renderAgencyConnectionsView() {
+        return (
+          <div className="connections-view">
+            <div className="db-table">
+              <div className="table-header">
+                <h2>Agency Field Authorities</h2>
+              </div>
+              <div style={{ padding: '20px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                  {solicitors.map(function(solicitor) {
+                    return (
+                      <div key={solicitor.id} className="agency-card" style={{ flex: '1', minWidth: '250px' }}>
+                        <h3 className="agency-header">
+                          {solicitor.name} <span style={{ fontWeight: 'normal', fontSize: '0.8rem' }}>({solicitor.full_name})</span>
+                        </h3>
+                        <p style={{ color: '#4a5568' }}>{solicitor.description}</p>
+                        <div>
+                          <strong>Field Authorities:</strong>
+                          <pre>
+                            <code>{solicitor.field_authorities}</code>
+                          </pre>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            
+            <div className="db-table" style={{ marginTop: '30px' }}>
+              <div className="table-header">
+                <h2>Agency Connections via Field Selections</h2>
+              </div>
+              <div style={{ padding: '20px' }}>
+                {service_solicitation_definitions.map(function(def) {
+                  const solicitor = getSolicitor(def.solicitor_id);
+                  const selectionFields = extractFields(def.solicited_selection);
+                  
+                  // Find connections
+                  const connectionsMap = {};
+                  selectionFields.forEach(function(field) {
+                    const owner = getFieldOwner(field);
+                    if (owner && owner.id !== def.solicitor_id) {
+                      if (!connectionsMap[owner.id]) {
+                        connectionsMap[owner.id] = {
+                          agency: owner,
+                          fields: []
+                        };
+                      }
+                      connectionsMap[owner.id].fields.push(field);
+                    }
+                  });
+                  
+                  const connections = Object.values(connectionsMap);
+                  
+                  return (
+                    <div key={def.id} className="agency-card" style={{ marginBottom: '20px' }}>
+                      <h3 className="agency-header">
+                        {solicitor ? solicitor.name : 'Unknown'} Service Solicitation (ID: {def.id})
+                      </h3>
+                      
+                      <div style={{ marginBottom: '15px' }}>
+                        <strong>Time Period:</strong> {formatDate(def.start_at)} - {formatDate(def.finish_at)}
+                      </div>
+                      
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', marginBottom: '20px' }}>
+                        <div style={{ flex: '1', minWidth: '250px' }}>
+                          <strong>Own Field Authorities:</strong>
+                          <pre>
+                            <code>{solicitor ? solicitor.field_authorities : 'N/A'}</code>
+                          </pre>
+                        </div>
+                        
+                        <div style={{ flex: '1', minWidth: '250px' }}>
+                          <strong>Requested Fields (Selection):</strong>
+                          <pre>
+                            <code>{def.solicited_selection}</code>
+                          </pre>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <strong>Field Dependencies Analysis:</strong>
+                        {connections.length > 0 ? (
+                          <ul style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '4px', listStylePosition: 'inside' }}>
+                            {connections.map(function(connection, idx) {
+                              return (
+                                <li key={idx} style={{ marginBottom: '10px' }}>
+                                  <strong className="field-external">{connection.agency.name}</strong> provides fields: 
+                                  {connection.fields.map(function(field, fidx) {
+                                    return (
+                                      <code key={fidx} style={{ marginLeft: '5px', marginRight: '5px' }}>{field}</code>
+                                    );
+                                  })}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        ) : (
+                          <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '4px', color: '#155724' }}>
+                            No external field dependencies - all requested fields are owned by this agency.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      }
+      
+      return (
+        <div>
+          <header>
+            <div>
+              <h1>Agency Service Solicitation Management</h1>
+              <p>Administrative interface for managing service solicitation definitions</p>
+            </div>
+            <div>
+              <button 
+                onClick={function() {
+                  setViewMode(viewMode === 'solicitations' ? 'connections' : 'solicitations');
+                  setSelectedSolicitation(null);
+                }}
+                style={{ backgroundColor: viewMode === 'connections' ? '#e2e6ea' : '#f1f2f6' }}
+              >
+                {viewMode === 'solicitations' ? 'Show Agency Connections' : 'Show Solicitations'}
+              </button>
+            </div>
+          </header>
+          
+          <div className="info-panel">
+            <strong>Note:</strong> This is a simplified representation of the database tables and APIs that power the service solicitation system. In a production environment, these would be managed through secure backend systems with proper authentication and authorization controls.
+          </div>
+          
+          {viewMode === 'solicitations' ? (
+            <div>
+              {renderSolicitationListView()}
+              {selectedSolicitation && renderSolicitationDetailView()}
+            </div>
+          ) : (
+            renderAgencyConnectionsView()
+          )}
+          
+          <div className="api-section">
+            <h2>API Endpoints</h2>
+            <p>The following GraphQL API endpoints are available for programmatic access to the service solicitation system:</p>
+            
+            <div className="endpoint">
+              <div className="endpoint-path">
+                <span className="method method-post">POST</span> /api/graphql
+              </div>
+              <p>GraphQL endpoint for querying and mutating service solicitation data</p>
+              
+              <h4>Example Query:</h4>
+              <pre>
+{`query GetServiceSolicitation($id: ID!) {
+  serviceSolicitation(id: $id) {
+    id
+    solicitorId
+    solicitedQuery
+    solicitedSelection
+    message
+    startAt
+    finishAt
+    responses {
+      id
+      solicitedId
+      status
+      resolvedAt
+    }
+  }
+}`}
+              </pre>
+              
+              <h4>Example Mutation:</h4>
+              <pre>
+{`mutation CreateServiceSolicitation($input: ServiceSolicitationInput!) {
+  createServiceSolicitation(input: $input) {
+    id
+    solicitorId
+    solicitedQuery
+    solicitedSelection
+    message
+    startAt
+    finishAt
+  }
+}`}
+              </pre>
+            </div>
+            
+            <div className="endpoint">
+              <div className="endpoint-path">
+                <span className="method method-get">GET</span> /api/service-solicitations
+              </div>
+              <p>RESTful endpoint for listing all service solicitations</p>
+              
+              <h4>SQL Query Example:</h4>
+              <div className="sql-example">
+                <code>
+                  <span className="sql-keyword">SELECT</span> id, solicitor_id, message, start_at, finish_at<br/>
+                  <span className="sql-keyword">FROM</span> service_solicitation_definitions<br/>
+                  <span className="sql-keyword">WHERE</span> start_at &lt;= <span className="sql-keyword">NOW</span>() <span className="sql-keyword">AND</span> finish_at &gt;= <span className="sql-keyword">NOW</span>()<br/>
+                  <span className="sql-keyword">ORDER BY</span> start_at <span className="sql-keyword">DESC</span>;
+                </code>
+              </div>
+            </div>
+            
+            <div className="endpoint">
+              <div className="endpoint-path">
+                <span className="method method-put">PUT</span> /api/service-solicitations/:id
+              </div>
+              <p>RESTful endpoint for updating a service solicitation</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Mount the React app
+    ReactDOM.createRoot(document.getElementById('root')).render(<SolicitorView />);
+  </script>
+</body>
+</html>
